@@ -52,6 +52,117 @@ npm start
 
 The server will start on `http://localhost:3000`
 
+---
+
+## Docker Deployment
+
+### Building the Docker Image
+
+The project includes a multi-stage Dockerfile optimized for production:
+
+```bash
+# Build the Docker image
+docker build -t posts-backend .
+```
+
+**Multi-stage build benefits:**
+- **Stage 1 (deps)**: Installs only production dependencies
+- **Stage 2 (build)**: Installs dev dependencies and compiles TypeScript
+- **Stage 3 (final)**: Creates minimal production image with compiled code
+
+### Running with Docker
+
+#### Option 1: Run application container only
+```bash
+# Run the container
+docker run -p 3000:3000 --name posts-api posts-backend
+```
+
+#### Option 2: Run with Docker Compose (Application + MongoDB)
+
+First, update your `docker-compose.yml` to include both services:
+
+```yaml
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: posts_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: posts_db
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - posts_network
+
+  app:
+    build: .
+    container_name: posts_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/posts_db?authSource=admin
+      PORT: 3000
+    depends_on:
+      - mongodb
+    networks:
+      - posts_network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  posts_network:
+    driver: bridge
+```
+
+Then run:
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (deletes database data)
+docker-compose down -v
+```
+
+### Docker Commands Reference
+
+```bash
+# Build image
+docker build -t posts-backend .
+
+# Run container
+docker run -d -p 3000:3000 --name posts-api posts-backend
+
+# View logs
+docker logs posts-api
+
+# Stop container
+docker stop posts-api
+
+# Remove container
+docker rm posts-api
+
+# Remove image
+docker rmi posts-backend
+```
+
 ## API Endpoints
 
 ### Base URL
