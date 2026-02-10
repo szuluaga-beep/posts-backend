@@ -17,7 +17,7 @@ FROM base AS deps
 # Use cache mounts to speed up dependency installation
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,id=npm-cache-deps,target=/root/.npm \
     npm ci --omit=dev
 
 ################################################################################
@@ -28,7 +28,7 @@ FROM base AS build
 # Install all dependencies (including devDependencies for TypeScript compilation)
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,id=npm-cache-build,target=/root/.npm \
     npm ci
 
 # Copy source code
