@@ -19,7 +19,7 @@ RUN npm run build
 
 
 # Run-time stage
-FROM node:22.20.0-alpine
+FROM node:22.20.0
 
 # Set non-root user and expose port 8080
 USER node
