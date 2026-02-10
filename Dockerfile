@@ -1,20 +1,37 @@
-# Use the Node official image
-# https://hub.docker.com/_/node
-FROM node:lts
+# Start with fully-featured Node.js base image
+FROM node:22.20.0 AS build
 
-# Specify the variable you need
-ARG MONGO_PUBLIC_URL
-# Use the variable
-RUN echo $MONGO_PUBLIC_URL
+USER node
 
-# Create and change to the app directory.
-WORKDIR /app
+WORKDIR /home/node/app
 
-# Copy local code to the container image
-COPY . ./
+# Copy dependency information and install all dependencies
+COPY --chown=node:node package.json package-lock.json ./
 
-# Install packages
-RUN npm ci
+RUN npm install --frozen-lockfile
 
-# Serve the app
-CMD [ "node", "dist/app.js" ]
+# Copy source code (and all other relevant files)
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node src ./src
+
+# Build code
+RUN npm run build
+
+
+# Run-time stage
+FROM node:22.20.0-alpine
+
+# Set non-root user and expose port 8080
+USER node
+EXPOSE 8080
+
+WORKDIR /home/node/app
+
+# Copy dependency information and install production-only dependencies
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm install --frozen-lockfile --production
+
+# Copy results from previous stage
+COPY --chown=node:node --from=build /home/node/app/dist ./dist
+
+CMD [ "node", "dist/index.js" ]
