@@ -17,4 +17,4 @@ COPY . ./
 RUN npm ci
 
 # Serve the app
-CMD ["npm", "run", "start"]
+CMD [ "node", "dist/app.js" ]
