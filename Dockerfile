@@ -1,22 +1,15 @@
-# Stage 1: Build the application
-FROM node:22.20-alpine AS build
+# Use the Node official image
+# https://hub.docker.com/_/node
+FROM node:lts
+
+# Create and change to the app directory.
 WORKDIR /app
-COPY package*.json ./
+
+# Copy local code to the container image
+COPY . ./
+
+# Install packages
 RUN npm ci
-COPY . .
-RUN npm run build
 
-# Stage 2: Production dependencies
-FROM node:22.20-alpine AS deps
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev
-
-# Stage 3: Run the application
-FROM node:22.20-alpine AS final
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY package.json .
-EXPOSE 3000
-CMD ["node", "dist/index.js"]
+# Serve the app
+CMD ["npm", "run", "start"]
