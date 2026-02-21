@@ -1,0 +1,144 @@
+# Reglas de Alertas para Prometheus - Posts Backend
+groups:
+  - name: application_alerts
+    interval: 30s
+    rules:
+      # ======================================
+      # Alertas de Aplicación
+      # ======================================
+      
+      - alert: HighErrorRate
+        expr: |
+          rate(http_request_errors_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Tasa de error alta en la aplicación"
+          description: "La tasa de error es {{ $value }} errores/segundo en los últimos 5 minutos"
+
+      - alert: HighRequestLatency
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Latencia alta detectada"
+          description: "El percentil 95 de latencia es {{ $value }} segundos"
+
+      - alert: CriticalHighLatency
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 1m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "CRÍTICO: Latencia extremadamente alta"
+          description: "El percentil 99 de latencia es {{ $value }} segundos (> 2s)"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (app_memory_usage_bytes / (1024 * 1024 * 1024)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Uso de memoria alto"
+          description: "La aplicación está usando {{ $value }} GB de memoria"
+
+      - alert: HighCPUUsage
+        expr: |
+          app_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Uso de CPU alto"
+          description: "CPU al {{ $value }}% en la aplicación"
+
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # ======================================
+      # Alertas del Sistema
+      # ======================================
+      
+      - alert: HighSystemCPU
+        expr: |
+          100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "CPU del sistema muy alta"
+          description: "CPU del sistema al {{ $value }}%"
+
+      - alert: HighDiskUsage
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "CRÍTICO: Disco casi lleno"
+          description: "Solo queda {{ $value }}% de espacio disponible en disco"
+
+      - alert: HighMemoryUsageSystem
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "CRÍTICO: Memoria del sistema crítica"
+          description: "Uso de memoria al {{ $value }}%"
+
+  - name: service_alerts
+    interval: 30s
+    rules:
+      # ======================================
+      # Alertas de Servicios
+      # ======================================
+      
+      - alert: ServiceDown
+        expr: |
+          up{job="nodejs-posts-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "CRÍTICO: Servicio caído"
+          description: "El servicio nodejs-posts-app no responde"
+
+      - alert: HighDatabaseQueryTime
+        expr: |
+          histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Queries a BD lentamente"
+          description: "P95 de query time: {{ $value }} segundos"
+
+      - alert: AbruptLatencyIncrease
+        expr: |
+          (histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[2m])) 
+           / histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[10m] offset 8m))) > 2
+        for: 2m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Aumento abrupto de latencia"
+          description: "La latencia se duplicó en los últimos minutos"

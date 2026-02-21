@@ -1,0 +1,52 @@
+# Configuración de Prometheus
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'posts-backend-monitoring'
+
+# Archivos con reglas de alertas
+rule_files:
+  - 'alert_rules.yml'
+
+# Configuración de alertmanager
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Configuración de scrape
+scrape_configs:
+  # =====================================
+  # Prometheus mismo
+  # =====================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # =====================================
+  # Aplicación Node.js (Posts Backend)
+  # =====================================
+  - job_name: 'nodejs-posts-app'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # =====================================
+  # Node Exporter (métricas del SO)
+  # =====================================
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # =====================================
+  # Alertmanager
+  # =====================================
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    scrape_interval: 15s
