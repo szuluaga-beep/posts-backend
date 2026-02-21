@@ -83,7 +83,13 @@ export default function() {
 
     if (res.status === 201 || res.status === 200) {
       try {
-        const postId = JSON.parse(res.body)._id || JSON.parse(res.body).id;
+        const responseBody = JSON.parse(res.body);
+        const postId = responseBody.data?._id;
+        
+        if (!postId) {
+          console.error('Error: No post ID received in response', res.body);
+          return;
+        }
         
         sleep(0.5);
 
@@ -91,6 +97,7 @@ export default function() {
           let getRes = getPostById(postId);
           check(getRes, {
             'get post by id status 200': (getRes) => getRes.status === 200,
+            'get post by id has data': (getRes) => JSON.parse(getRes.body).data !== undefined,
           });
         });
 
@@ -100,10 +107,11 @@ export default function() {
           let deleteRes = deletePost(postId);
           check(deleteRes, {
             'delete post status 200': (deleteRes) => deleteRes.status === 200 || deleteRes.status === 204,
+            'delete post has data': (deleteRes) => JSON.parse(deleteRes.body).data !== undefined,
           });
         });
       } catch (e) {
-        console.error('Error:', e);
+        console.error('Error parsing response:', e);
       }
     }
   });
