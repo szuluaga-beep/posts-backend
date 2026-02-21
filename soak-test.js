@@ -17,7 +17,7 @@ export const options = {
 };
 
 function getPosts() {
-  return http.get(`${BASE_URL}/posts`);
+  return http.get(`${BASE_URL}/api/posts`);
 }
 
 function createPost(data) {
@@ -27,7 +27,7 @@ function createPost(data) {
       'Content-Type': 'application/json',
     },
   };
-  return http.post(`${BASE_URL}/posts`, payload, params);
+  return http.post(`${BASE_URL}/api/posts`, payload, params);
 }
 
 export default function() {

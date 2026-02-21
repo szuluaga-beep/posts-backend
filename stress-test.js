@@ -24,15 +24,15 @@ function createPost(data) {
       'Content-Type': 'application/json',
     },
   };
-  return http.post(`${BASE_URL}/posts`, payload, params);
+  return http.post(`${BASE_URL}/api/posts`, payload, params);
 }
 
 function getPosts() {
-  return http.get(`${BASE_URL}/posts`);
+  return http.get(`${BASE_URL}/api/posts`);
 }
 
 function deletePost(id) {
-  return http.del(`${BASE_URL}/posts/${id}`);
+  return http.del(`${BASE_URL}/api/posts/${id}`);
 }
 
 export default function() {

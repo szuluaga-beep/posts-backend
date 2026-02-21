@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { sleep, check, group } from 'k6';
 
-const BASE_URL = `http://${__ENV.API_URL ?? 'host.docker.internal:3000'}`;
+const BASE_URL = `http://localhost:3000`; // Cambia esto si tu API está en otro lugar
 
 // Prueba de carga: aumento gradual y mantenimiento de usuarios
 export const options = {
@@ -23,15 +23,15 @@ function createPost(data) {
       'Content-Type': 'application/json',
     },
   };
-  return http.post(`${BASE_URL}/posts`, payload, params);
+  return http.post(`${BASE_URL}/api/posts`, payload, params);
 }
 
 function getPosts() {
-  return http.get(`${BASE_URL}/posts`);
+  return http.get(`${BASE_URL}/api/posts`);
 }
 
 function getPostById(id) {
-  return http.get(`${BASE_URL}/posts/${id}`);
+  return http.get(`${BASE_URL}/api/posts/${id}`);
 }
 
 function updatePost(id, data) {
@@ -41,11 +41,11 @@ function updatePost(id, data) {
       'Content-Type': 'application/json',
     },
   };
-  return http.put(`${BASE_URL}/posts/${id}`, payload, params);
+  return http.put(`${BASE_URL}/api/posts/${id}`, payload, params);
 }
 
 function deletePost(id) {
-  return http.del(`${BASE_URL}/posts/${id}`);
+  return http.del(`${BASE_URL}/api/posts/${id}`);
 }
 
 export default function() {

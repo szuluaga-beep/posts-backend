@@ -27,14 +27,14 @@ function createDummyData() {
       'Content-Type': 'application/json',
     },
   };
-  return http.post(`${BASE_URL}/posts`, payload, params);
+  return http.post(`${BASE_URL}/api/posts`, payload, params);
 }
 
 export default function() {
   // Múltiples requests simultáneos durante el pico
   for (let i = 0; i < 3; i++) {
     group(`Spike request ${i + 1}`, function() {
-      let res = http.get(`${BASE_URL}/posts`);
+      let res = http.get(`${BASE_URL}/api/posts`);
       check(res, {
         'status is 200': (res) => res.status === 200,
       });
